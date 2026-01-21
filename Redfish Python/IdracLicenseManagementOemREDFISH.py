@@ -239,11 +239,13 @@ def loop_job_status():
             logging.error("Extended Info Message: {0}".format(req.json()))
             sys.exit(0)
         data = response.json()
-        if str(current_time)[0:7] >= "0:05:00":
+        if data["Message"] == None:
+            continue
+        elif str(current_time)[0:7] >= "0:05:00":
             logging.error("\n- FAIL: Timeout of 5 minutes has been hit, script stopped\n")
             sys.exit(0)
-        elif "Fail" in data['Message'] or "fail" in data['Message'] or data['JobState'] == "Failed":
-            logging.error("- FAIL: job ID %s failed, failed message is: %s" % (job_id, data['Message']))
+        elif "fail" in data["Message"].lower() or data["JobState"] == "Failed":
+            logging.error("- FAIL: job ID %s failed, message: %s" % (job_id, data["Message"]))
             sys.exit(0)
         elif data['JobState'] == "Completed":
             if data['Message'] == "The command was successful":
@@ -255,6 +257,7 @@ def loop_job_status():
             break
         else:
             logging.info("- INFO, job status not completed, execution time: \"%s\"" % (str(current_time)[0:7]))
+            time.sleep(1)
 
 if __name__ == "__main__":
     if args["script_examples"]:
@@ -294,3 +297,4 @@ if __name__ == "__main__":
         delete_idrac_license()
     else:
         logging.error("\n- FAIL, invalid argument values or not all required parameters passed in. See help text or argument --script-examples for more details.")
+
